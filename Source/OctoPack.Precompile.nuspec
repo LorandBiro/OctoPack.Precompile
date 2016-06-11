@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>OctoPack.Precompile</id>
+    <version>1.0.0</version>
+    <title>OctoPack.Precompile</title>
+    <authors>Loránd Biró</authors>
+    <owners>Loránd Biró</owners>
+    <licenseUrl>https://github.com/LorandBiro/OctoPack.Precompile/raw/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/LorandBiro/OctoPack.Precompile</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <developmentDependency>true</developmentDependency>
+    <description>This package adds an ASP.NET precompile step to the build just before (and only if) OctoPack is called. Change your nuspec file to include the precompiled files and next time when TeamCity or another build tool invokes OctoPack, precompilation will kick in and your deploy package will contain a precompiled website. Visit the project site for more detailed instructions.</description>
+    <summary>ASP.NET precompile build step for OctoPack.</summary>
+    <tags>octopus octopack asp.net website precompile</tags>
+  </metadata>
+  <files>
+    <file src="OctoPack.Precompile.targets" target="build" />
+  </files>
+</package>

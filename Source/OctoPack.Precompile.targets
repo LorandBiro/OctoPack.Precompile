@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PrecompiledIntermediateFolder Condition="'$(PrecompiledIntermediateFolder)'==''">obj\PrecompiledIntermediate</PrecompiledIntermediateFolder>
+    <PrecompiledFolder Condition="'$(PrecompiledFolder)'==''">obj\Precompiled</PrecompiledFolder>
+  </PropertyGroup>
+  
+  <Target Name="Precompile" BeforeTargets="OctoPack" Condition="$(RunOctoPack)">
+    <ItemGroup>
+      <!-- This should collect the files the same way OctoPack does. https://github.com/OctopusDeploy/OctoPack -->
+      <CollectedFiles Include="@(FileWrites)" Exclude="$(IntermediateOutputPath)**\*" />
+      <CollectedFiles Include="@(FileWritesShareable)" Exclude="$(IntermediateOutputPath)**\*" />
+      <CollectedFiles Include="@(Content)" />
+
+      <!--
+        Some of the collected file paths are full paths, but we need paths relative to the project so we can perform a recursive copy.
+        Also it looks like NuGet doesn't like the packages.config inside the packages, so we skip it.
+        http://help.octopusdeploy.com/discussions/problems/29208-packagesconfig-files-are-excluded-from-packages-created-by-octopack
+      -->
+      <NormalizedFiles Include="@(CollectedFiles->'%(FullPath)'->Substring($(ProjectDir.Length)))" Exclude="packages.config" />
+    </ItemGroup>
+
+    <!-- It's important to clear the output folder, so the nuspec file can include the whole folder. -->
+    <RemoveDir Directories="$(PrecompiledIntermediateFolder);$(PrecompiledFolder)" />
+
+    <Copy SourceFiles="@(NormalizedFiles)"
+          DestinationFiles="@(NormalizedFiles->'$(PrecompiledIntermediateFolder)\%(Identity)')" />
+
+    <AspNetCompiler PhysicalPath="$(ProjectDir)$(PrecompiledIntermediateFolder)"
+                    TargetPath="$(ProjectDir)$(PrecompiledFolder)"
+                    VirtualPath="/" />
+  </Target>
+</Project>
