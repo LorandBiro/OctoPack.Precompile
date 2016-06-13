@@ -1,11 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <PrecompiledIntermediateFolder Condition="'$(PrecompiledIntermediateFolder)'==''">obj\PrecompiledIntermediate</PrecompiledIntermediateFolder>
-    <PrecompiledFolder Condition="'$(PrecompiledFolder)'==''">obj\Precompiled</PrecompiledFolder>
+    <OctoPackPrecompileIntermediateOutputPath Condition="'$(OctoPackPrecompileIntermediateOutputPath)'==''">$(IntermediateOutputPath)PrecompiledIntermediate\</OctoPackPrecompileIntermediateOutputPath>
+    <OctoPackPrecompileOutputPath Condition="'$(OctoPackPrecompileOutputPath)'==''">$(IntermediateOutputPath)Precompiled\</OctoPackPrecompileOutputPath>
+    <OctoPackPrecompileNuSpecFileName Condition="'$(OctoPackPrecompileNuSpecFileName)'==''">$(IntermediateOutputPath)$(MSBuildProjectName).nuspec</OctoPackPrecompileNuSpecFileName>
   </PropertyGroup>
-  
-  <Target Name="Precompile" BeforeTargets="OctoPack" Condition="$(RunOctoPack)">
+
+  <Target Name="GenerateOctoPackPrecompileNuSpecFile" BeforeTargets="OctoPackPrecompile" Condition="'$(OctoPackNuSpecFileName)' == '' AND !Exists('$(MSBuildProjectName).nuspec')">
+    <PropertyGroup>
+      <OctoPackNuSpecFileName>$(OctoPackPrecompileNuSpecFileName)</OctoPackNuSpecFileName>
+      <PrecompileNuSpecFileContent>
+        <![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>$(MSBuildProjectName)</id>
+    <authors>$(MSBuildProjectName)</authors>
+    <description>$(MSBuildProjectName)</description>
+    <version>1.0.0</version>
+  </metadata>
+  <files>
+    <file src="$(OctoPackPrecompileOutputPath)**\*.*" target="" />
+  </files>
+</package>
+]]>
+      </PrecompileNuSpecFileContent>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(OctoPackNuSpecFileName)" Lines="$(PrecompileNuSpecFileContent)" Overwrite="true" />
+  </Target>
+
+  <Target Name="OctoPackPrecompile" BeforeTargets="OctoPack" Condition="$(RunOctoPack)">
     <ItemGroup>
       <!-- This should collect the files the same way OctoPack does. https://github.com/OctopusDeploy/OctoPack -->
       <CollectedFiles Include="@(FileWrites)" Exclude="$(IntermediateOutputPath)**\*" />
@@ -21,13 +45,13 @@
     </ItemGroup>
 
     <!-- It's important to clear the output folder, so the nuspec file can include the whole folder. -->
-    <RemoveDir Directories="$(PrecompiledIntermediateFolder);$(PrecompiledFolder)" />
+    <RemoveDir Directories="$(OctoPackPrecompileIntermediateOutputPath);$(OctoPackPrecompileOutputPath)" />
 
     <Copy SourceFiles="@(NormalizedFiles)"
-          DestinationFiles="@(NormalizedFiles->'$(PrecompiledIntermediateFolder)\%(Identity)')" />
+          DestinationFiles="@(NormalizedFiles->'$(OctoPackPrecompileIntermediateOutputPath)%(Identity)')" />
 
-    <AspNetCompiler PhysicalPath="$(ProjectDir)$(PrecompiledIntermediateFolder)"
-                    TargetPath="$(ProjectDir)$(PrecompiledFolder)"
+    <AspNetCompiler PhysicalPath="$(ProjectDir)$(OctoPackPrecompileIntermediateOutputPath)"
+                    TargetPath="$(ProjectDir)$(OctoPackPrecompileOutputPath)"
                     VirtualPath="/" />
   </Target>
 </Project>
