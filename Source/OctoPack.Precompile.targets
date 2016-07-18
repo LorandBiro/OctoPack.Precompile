@@ -35,7 +35,7 @@
       <CollectedFiles Include="@(FileWrites)" Exclude="$(IntermediateOutputPath)**\*" />
       <CollectedFiles Include="@(FileWritesShareable)" Exclude="$(IntermediateOutputPath)**\*" />
       <CollectedFiles Include="@(Content)" />
-      <CollectedFiles Include="@(TypeScriptCompile)" />
+      <CollectedFiles Include="@(TypeScriptCompile)" Condition="$(OctoPackIncludeTypeScriptSourceFiles)"/>
 
       <!--
         Some of the collected file paths are full paths, but we need paths relative to the project so we can perform a recursive copy.
