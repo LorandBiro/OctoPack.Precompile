@@ -3,19 +3,19 @@
   <PropertyGroup>
     <OctoPackPrecompileIntermediateOutputPath Condition="'$(OctoPackPrecompileIntermediateOutputPath)'==''">$(IntermediateOutputPath)PrecompiledIntermediate\</OctoPackPrecompileIntermediateOutputPath>
     <OctoPackPrecompileOutputPath Condition="'$(OctoPackPrecompileOutputPath)'==''">$(IntermediateOutputPath)Precompiled\</OctoPackPrecompileOutputPath>
-    <OctoPackPrecompileNuSpecFileName Condition="'$(OctoPackPrecompileNuSpecFileName)'==''">$(IntermediateOutputPath)$(MSBuildProjectName).nuspec</OctoPackPrecompileNuSpecFileName>
+    <OctoPackPrecompileNuSpecFileName Condition="'$(OctoPackPrecompileNuSpecFileName)'==''">$(IntermediateOutputPath)$(OctoPackProjectName).nuspec</OctoPackPrecompileNuSpecFileName>
   </PropertyGroup>
 
-  <Target Name="GenerateOctoPackPrecompileNuSpecFile" BeforeTargets="OctoPackPrecompile" Condition="'$(OctoPackNuSpecFileName)' == '' AND !Exists('$(MSBuildProjectName).nuspec')">
+  <Target Name="GenerateOctoPackPrecompileNuSpecFile" BeforeTargets="OctoPackPrecompile" Condition="'$(OctoPackNuSpecFileName)' == '' AND !Exists('$(OctoPackProjectName).nuspec')">
     <PropertyGroup>
       <OctoPackNuSpecFileName>$(OctoPackPrecompileNuSpecFileName)</OctoPackNuSpecFileName>
       <PrecompileNuSpecFileContent>
         <![CDATA[<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>$(MSBuildProjectName)</id>
-    <authors>$(MSBuildProjectName)</authors>
-    <description>$(MSBuildProjectName)</description>
+    <id>$(OctoPackProjectName)</id>
+    <authors>$(OctoPackProjectName)</authors>
+    <description>$(OctoPackProjectName)</description>
     <version>1.0.0</version>
   </metadata>
   <files>
