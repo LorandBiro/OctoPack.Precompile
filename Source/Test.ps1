@@ -1,3 +1,4 @@
+cd $PSScriptRoot
 .\Build.ps1
 
 # Restore NuGet packages before build
@@ -15,4 +16,7 @@ if (-not (Test-Path "WebApplication1\bin\WebApplication1.1.0.0.nupkg"))
 
 Pop-Location
 
-Read-Host
+if ($host.name -eq 'ConsoleHost') 
+{
+  Read-Host -Prompt "Press_Enter_to_continue"
+}

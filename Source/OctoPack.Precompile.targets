@@ -8,6 +8,7 @@
 
   <Target Name="GenerateOctoPackPrecompileNuSpecFile" BeforeTargets="OctoPackPrecompile" Condition="'$(OctoPackNuSpecFileName)' == '' AND !Exists('$(OctoPackProjectName).nuspec')">
     <PropertyGroup>
+	<!-- Specify the source for subsequent OctPack target -->
       <OctoPackNuSpecFileName>$(OctoPackPrecompileNuSpecFileName)</OctoPackNuSpecFileName>
       <PrecompileNuSpecFileContent>
         <![CDATA[<?xml version="1.0" encoding="utf-8"?>
@@ -28,31 +29,58 @@
 
     <WriteLinesToFile File="$(OctoPackNuSpecFileName)" Lines="$(PrecompileNuSpecFileContent)" Overwrite="true" />
   </Target>
-
-  <Target Name="OctoPackPrecompile" BeforeTargets="OctoPack" Condition="$(RunOctoPack)">
-    <ItemGroup>
-      <!-- This should collect the files the same way OctoPack does. https://github.com/OctopusDeploy/OctoPack -->
-      <CollectedFiles Include="@(FileWrites)" Exclude="$(IntermediateOutputPath)**\*" />
-      <CollectedFiles Include="@(FileWritesShareable)" Exclude="$(IntermediateOutputPath)**\*" />
-      <CollectedFiles Include="@(Content)" />
-      <CollectedFiles Include="@(TypeScriptCompile)" Condition="$(OctoPackIncludeTypeScriptSourceFiles)"/>
-
-      <!--
-        Some of the collected file paths are full paths, but we need paths relative to the project so we can perform a recursive copy.
-        Also it looks like NuGet doesn't like the packages.config inside the packages, so we skip it.
-        http://help.octopusdeploy.com/discussions/problems/29208-packagesconfig-files-are-excluded-from-packages-created-by-octopack
-      -->
-      <NormalizedFiles Include="@(CollectedFiles->'%(FullPath)'->Substring($(ProjectDir.Length)))" Exclude="packages.config" />
-    </ItemGroup>
-
-    <!-- It's important to clear the output folder, so the nuspec file can include the whole folder. -->
-    <RemoveDir Directories="$(OctoPackPrecompileIntermediateOutputPath);$(OctoPackPrecompileOutputPath)" />
-
-    <Copy SourceFiles="@(NormalizedFiles)"
-          DestinationFiles="@(NormalizedFiles->'$(OctoPackPrecompileIntermediateOutputPath)%(Identity)')" />
-
-    <AspNetCompiler PhysicalPath="$(ProjectDir)$(OctoPackPrecompileIntermediateOutputPath)"
+   <Target Name="OctoPackPrecompile"  BeforeTargets="OctoPack" Condition="$(RunOctoPack)" DependsOnTargets="OctoPackPrecompile_OutDir;OctoPackPrecompile_InPlace"/>
+ <!-- if OutDir is not specified the default value is 'bin\', the root directory for files is  (ProjectDir) -->
+ <!-- if OutDir is specified, the root directory for files is $(OutDir),-->
+   <Target Name="OctoPackPrecompile_OutDir" BeforeTargets="OctoPack" Condition="($(RunOctoPack)) And ('$(OutDir)'!='bin\') ">
+       <!-- Traces, can be deleted -->
+	   <Message Text="DEBUG MSBuildProjectName:   $(MSBuildProjectName) " Importance="low"/>
+       <Message Text="DEBUG roslyn src :   $(OutDir)\roslyn " Importance="low"/>
+	   <Message Text="DEBUG roslyn target bin:   $(OutDir)_PublishedWebsites\$(MSBuildProjectName)\bin\roslyn " Importance="low"/>
+	   
+	   <ItemGroup>
+            <RoslynFolder Include="$(OutDir)roslyn\*.*"/>
+        </ItemGroup>
+   		<Copy SourceFiles="@(RoslynFolder)"  DestinationFolder="$(OutDir)_PublishedWebsites\$(MSBuildProjectName)\bin\roslyn" />
+<!-- TODO: consider to replace $(ProjectDir)$(OctoPackPrecompileOutputPath) with $(OutDir)$(OctoPackPrecompileOutputPath) -->
+	   <AspNetCompiler PhysicalPath="$(OutDir)_PublishedWebsites\$(MSBuildProjectName)"
                     TargetPath="$(ProjectDir)$(OctoPackPrecompileOutputPath)"
                     VirtualPath="/" />
-  </Target>
-</Project>
+	</Target>
+	
+	<Target Name="OctoPackPrecompile_InPlace" BeforeTargets="OctoPack" Condition="($(RunOctoPack)) And ('$(OutDir)'=='bin\')">
+  
+ 	  <!-- Traces, can be deleted -->
+		  <Message Text="DEBUG  FileWrites: @(FileWrites)" Importance="low"/>
+		  <Message Text="DEBUG  FileWritesShareable: @(FileWritesShareable)" Importance="low"/>
+		  <Message Text="DEBUG  Content: @(Content)" Importance="low"/>
+		  <Message Text="DEBUG  TypeScriptCompile: @(TypeScriptCompile)" Importance="low"/>
+		  <Message Text="DEBUG ProjectDir:  $(ProjectDir) " Importance="low"/>
+		  <Message Text="DEBUG OutDir:   $(OutDir) " Importance="low"/>
+
+		<ItemGroup>
+		  <!-- This should collect the files the same way OctoPack does. https://github.com/OctopusDeploy/OctoPack -->
+		  <CollectedFiles Include="@(FileWrites)" Exclude="$(IntermediateOutputPath)**\*" />
+		  <CollectedFiles Include="@(FileWritesShareable)" Exclude="$(IntermediateOutputPath)**\*" />
+      <CollectedFiles Include="@(Content)" />
+		  <CollectedFiles Include="@(TypeScriptCompile)" Condition="$(OctoPackIncludeTypeScriptSourceFiles)"/>
+
+		  <!--
+			Some of the collected file paths are full paths, but we need paths relative to the project so we can perform a recursive copy.
+			Also it looks like NuGet doesn't like the packages.config inside the packages, so we skip it.
+			http://help.octopusdeploy.com/discussions/problems/29208-packagesconfig-files-are-excluded-from-packages-created-by-octopack
+		  -->
+      <NormalizedFiles Include="@(CollectedFiles->'%(FullPath)'->Substring($(ProjectDir.Length)))" Exclude="packages.config" />
+		</ItemGroup>
+	  
+		<!-- It's important to clear the output folder, so the nuspec file can include the whole folder. -->
+		<RemoveDir Directories="$(OctoPackPrecompileIntermediateOutputPath);$(OctoPackPrecompileOutputPath)" />
+
+		<Copy SourceFiles="@(NormalizedFiles)"  
+					DestinationFiles="@(NormalizedFiles->'$(OctoPackPrecompileIntermediateOutputPath)%(Identity)')" /> 
+
+			<AspNetCompiler PhysicalPath="$(ProjectDir)$(OctoPackPrecompileIntermediateOutputPath)"
+							TargetPath="$(ProjectDir)$(OctoPackPrecompileOutputPath)"
+							VirtualPath="/" />
+</Target>
+ </Project>
