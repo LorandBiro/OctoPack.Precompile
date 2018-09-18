@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <RunOctoPackPrecompile Condition="'$(RunOctoPackPrecompile)'==''">true</RunOctoPackPrecompile>
     <OctoPackPrecompileIntermediateOutputPath Condition="'$(OctoPackPrecompileIntermediateOutputPath)'==''">$(IntermediateOutputPath)PrecompiledIntermediate\</OctoPackPrecompileIntermediateOutputPath>
     <OctoPackPrecompileOutputPath Condition="'$(OctoPackPrecompileOutputPath)'==''">$(IntermediateOutputPath)Precompiled\</OctoPackPrecompileOutputPath>
     <OctoPackPrecompileNuSpecFileName Condition="'$(OctoPackPrecompileNuSpecFileName)'==''">$(IntermediateOutputPath)$(OctoPackProjectName).nuspec</OctoPackPrecompileNuSpecFileName>
@@ -29,7 +30,7 @@
     <WriteLinesToFile File="$(OctoPackNuSpecFileName)" Lines="$(PrecompileNuSpecFileContent)" Overwrite="true" />
   </Target>
 
-  <Target Name="OctoPackPrecompile" BeforeTargets="OctoPack" Condition="$(RunOctoPack)">
+  <Target Name="OctoPackPrecompile" BeforeTargets="OctoPack" Condition="$(RunOctoPack) AND $(RunOctoPackPrecompile)">
     <ItemGroup>
       <!-- This should collect the files the same way OctoPack does. https://github.com/OctopusDeploy/OctoPack -->
       <CollectedFiles Include="@(FileWrites)" Exclude="$(IntermediateOutputPath)**\*" />
