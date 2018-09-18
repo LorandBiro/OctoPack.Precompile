@@ -7,7 +7,7 @@
     <OctoPackPrecompileNuSpecFileName Condition="'$(OctoPackPrecompileNuSpecFileName)'==''">$(IntermediateOutputPath)$(OctoPackProjectName).nuspec</OctoPackPrecompileNuSpecFileName>
   </PropertyGroup>
 
-  <Target Name="GenerateOctoPackPrecompileNuSpecFile" BeforeTargets="OctoPackPrecompile" Condition="'$(OctoPackNuSpecFileName)' == '' AND !Exists('$(OctoPackProjectName).nuspec')">
+  <Target Name="GenerateOctoPackPrecompileNuSpecFile" BeforeTargets="OctoPackPrecompile" Condition="$(RunOctoPackPrecompile) AND '$(OctoPackNuSpecFileName)' == '' AND !Exists('$(OctoPackProjectName).nuspec')">
     <PropertyGroup>
       <OctoPackNuSpecFileName>$(OctoPackPrecompileNuSpecFileName)</OctoPackNuSpecFileName>
       <PrecompileNuSpecFileContent>
