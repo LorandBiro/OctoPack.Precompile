@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -23,9 +25,9 @@ namespace OctoPack.Precompile.Tests
         }
 
         [Fact]
-        public void EnablingOctoPackEnablesOctoPackPrecompileAutomatically()
+        public async Task EnablingOctoPackEnablesOctoPackPrecompileAutomatically()
         {
-            this.Build("/p:RunOctoPack=true");
+            await this.BuildAsync("/p:RunOctoPack=true");
             using (ZipArchive archive = ZipFile.OpenRead(NuGetPackagePath))
             {
                 Assert.True(archive.Entries.Any(x => x.Name.EndsWith(".compiled")), "Couldn't find compiled files in the output NuGet package.");
@@ -33,18 +35,41 @@ namespace OctoPack.Precompile.Tests
         }
 
         [Fact]
-        public void RunOctoPackPrecompile_CanBeUsedToDisableThePrecompilation()
+        public async Task RunOctoPackPrecompile_CanBeUsedToDisableThePrecompilation()
         {
-            this.Build("/p:RunOctoPack=true /p:RunOctoPackPrecompile=false");
+            await this.BuildAsync("/p:RunOctoPack=true /p:RunOctoPackPrecompile=false");
             using (ZipArchive archive = ZipFile.OpenRead(NuGetPackagePath))
             {
                 Assert.False(archive.Entries.Any(x => x.Name.EndsWith(".compiled")), "Found compiled files in the output NuGet package.");
             }
         }
 
-        private void Build(string arguments)
+        private async Task BuildAsync(string arguments)
         {
-            ProcessStartInfo psi = new ProcessStartInfo(MSBuildPath, $"{SolutionFilePath} /target:Rebuild {arguments}")
+            await this.RestoreNuGetPackagesAsync();
+            await this.ExecuteProcessAsync(MSBuildPath, $"{SolutionFilePath} /target:Rebuild {arguments}");
+        }
+
+        private async Task RestoreNuGetPackagesAsync()
+        {
+            await this.EnsureNuGetIsDownloadedAsync();
+            await this.ExecuteProcessAsync("nuget.exe", $"restore {SolutionFilePath}");
+        }
+
+        private async Task EnsureNuGetIsDownloadedAsync()
+        {
+            if (File.Exists("nuget.exe"))
+            {
+                return;
+            }
+
+            WebClient wc = new WebClient();
+            await wc.DownloadFileTaskAsync(new Uri("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"), "nuget.exe");
+        }
+
+        private async Task ExecuteProcessAsync(string filePath, string arguments)
+        {
+            ProcessStartInfo psi = new ProcessStartInfo(filePath, arguments)
             {
                 UseShellExecute = false,
                 RedirectStandardOutput = true
@@ -52,11 +77,11 @@ namespace OctoPack.Precompile.Tests
 
             using (Process process = Process.Start(psi))
             {
-                string log = process.StandardOutput.ReadToEnd();
+                string log = await process.StandardOutput.ReadToEndAsync();
+                this.output.WriteLine(log);
                 if (process.ExitCode != 0)
                 {
-                    this.output.WriteLine(log);
-                    Assert.True(false, "MSBuild process failed. See test output.");
+                    Assert.True(false, $"{Path.GetFileName(filePath)} failed with exit code {process.ExitCode}. See test output.");
                 }
             }
         }
