@@ -11,9 +11,9 @@ namespace OctoPack.Precompile.Tests
     public class BuildTest
     {
         private const string MSBuildPath = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Professional\\MSBuild\\15.0\\Bin\\MSBuild.exe";
-        private static readonly string SolutionDirectoryPath = Path.GetFullPath(Path.Join(Environment.CurrentDirectory, "..\\..\\..\\..\\Source\\Test\\WebApplication1"));
-        private static readonly string SolutionFilePath = Path.Join(SolutionDirectoryPath, "WebApplication1.sln");
-        private static readonly string NuGetPackagePath = Path.Join(SolutionDirectoryPath, "WebApplication1\\bin\\WebApplication1.1.0.0.nupkg");
+        private static readonly string SolutionDirectoryPath = Path.GetFullPath(Path.Join(Environment.CurrentDirectory, "..\\..\\..\\..\\TestWebApplication"));
+        private static readonly string SolutionFilePath = Path.Join(SolutionDirectoryPath, "TestWebApplication.sln");
+        private static readonly string NuGetPackagePath = Path.Join(SolutionDirectoryPath, "bin\\TestWebApplication.0.0.0.0.nupkg");
 
         private readonly ITestOutputHelper output;
 
