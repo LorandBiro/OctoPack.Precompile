@@ -44,11 +44,20 @@
       -->
       <CollectedFiles Remove="packages.config" />
       
-      <!-- Some of the collected file paths are full paths, but we need paths relative to the project so we can perform a recursive copy. -->
       <NormalizedFiles Include="@(CollectedFiles)" Condition="'%(CollectedFiles.Link)' == ''">
+        <!--
+          The Identity metadata of the items are inconsistent, some of them are full paths and some of them are relative. To keep the file and directory
+          structure during the copy we need the relative path, so we take the FullPath metadata and calculate the relative path manually.
+          The [System.String]::Copy is a workaround, I couldn't make it work with simpler syntax. Found this solution here:
+          https://stackoverflow.com/questions/5103026/in-msbuild-can-i-use-the-string-replace-function-on-a-metadata-item
+        -->
         <DestinationPath>$(OctoPackPrecompileIntermediateOutputPath)$([System.String]::Copy('%(FullPath)').Substring($(ProjectDir.Length)))</DestinationPath>
       </NormalizedFiles>
+
       <NormalizedFiles Include="@(CollectedFiles)" Condition="'%(CollectedFiles.Link)' != ''">
+        <!--
+          In case of linked files the Identity metadata is where the file actually exists so we need to use the Link metadata as the destination url.
+        -->
         <DestinationPath>$(OctoPackPrecompileIntermediateOutputPath)%(CollectedFiles.Link)</DestinationPath>
       </NormalizedFiles>
     </ItemGroup>
