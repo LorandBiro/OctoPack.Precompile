@@ -30,7 +30,8 @@ namespace OctoPack.Precompile.Tests
             await this.BuildAsync("/p:RunOctoPack=true");
             using (ZipArchive archive = ZipFile.OpenRead(NuGetPackagePath))
             {
-                Assert.True(archive.Entries.Any(x => x.Name.EndsWith(".compiled")), "Couldn't find compiled files in the output NuGet package.");
+                // Precompilation is enabled by default and we assert this by checking whether PrecompiledApp.config exists. It's created by the aspnetcompiler.exe.
+                Assert.True(archive.Entries.Any(x => x.FullName == "PrecompiledApp.config"), "Couldn't find compiled files in the output NuGet package.");
             }
         }
 
@@ -40,7 +41,19 @@ namespace OctoPack.Precompile.Tests
             await this.BuildAsync("/p:RunOctoPack=true /p:RunOctoPackPrecompile=false");
             using (ZipArchive archive = ZipFile.OpenRead(NuGetPackagePath))
             {
-                Assert.False(archive.Entries.Any(x => x.Name.EndsWith(".compiled")), "Found compiled files in the output NuGet package.");
+                // By setting RunOctoPackPrecompile to false we can disable the precompilation, so we should not find the PrecompiledApp.config file.
+                Assert.False(archive.Entries.Any(x => x.FullName == "PrecompiledApp.config"), "Found compiled files in the output NuGet package.");
+            }
+        }
+
+        [Fact]
+        public async Task LinkedFilesAreHandledProperly()
+        {
+            await this.BuildAsync("/p:RunOctoPack=true");
+            using (ZipArchive archive = ZipFile.OpenRead(NuGetPackagePath))
+            {
+                // There's a linked file in the test project and here we assert that it's properly resolved and packaged.
+                Assert.True(archive.Entries.Any(x => x.FullName == "Relative.cshtml"), "Couldn't find the linked file in the package.");
             }
         }
 

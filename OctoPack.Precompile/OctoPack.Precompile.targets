@@ -39,18 +39,25 @@
       <CollectedFiles Include="@(TypeScriptCompile)" Condition="$(OctoPackIncludeTypeScriptSourceFiles)"/>
 
       <!--
-        Some of the collected file paths are full paths, but we need paths relative to the project so we can perform a recursive copy.
-        Also it looks like NuGet doesn't like the packages.config inside the packages, so we skip it.
+        It looks like NuGet doesn't like the packages.config inside the packages, so we skip it.
         http://help.octopusdeploy.com/discussions/problems/29208-packagesconfig-files-are-excluded-from-packages-created-by-octopack
       -->
-      <NormalizedFiles Include="@(CollectedFiles->'%(FullPath)'->Substring($(ProjectDir.Length)))" Exclude="packages.config" />
+      <CollectedFiles Remove="packages.config" />
+      
+      <!-- Some of the collected file paths are full paths, but we need paths relative to the project so we can perform a recursive copy. -->
+      <NormalizedFiles Include="@(CollectedFiles)" Condition="'%(CollectedFiles.Link)' == ''">
+        <DestinationPath>$(OctoPackPrecompileIntermediateOutputPath)$([System.String]::Copy('%(FullPath)').Substring($(ProjectDir.Length)))</DestinationPath>
+      </NormalizedFiles>
+      <NormalizedFiles Include="@(CollectedFiles)" Condition="'%(CollectedFiles.Link)' != ''">
+        <DestinationPath>$(OctoPackPrecompileIntermediateOutputPath)%(CollectedFiles.Link)</DestinationPath>
+      </NormalizedFiles>
     </ItemGroup>
 
     <!-- It's important to clear the output folder, so the nuspec file can include the whole folder. -->
     <RemoveDir Directories="$(OctoPackPrecompileIntermediateOutputPath);$(OctoPackPrecompileOutputPath)" />
 
     <Copy SourceFiles="@(NormalizedFiles)"
-          DestinationFiles="@(NormalizedFiles->'$(OctoPackPrecompileIntermediateOutputPath)%(Identity)')" />
+          DestinationFiles="@(NormalizedFiles->'%(DestinationPath)')" />
 
     <AspNetCompiler PhysicalPath="$(ProjectDir)$(OctoPackPrecompileIntermediateOutputPath)"
                     TargetPath="$(ProjectDir)$(OctoPackPrecompileOutputPath)"
