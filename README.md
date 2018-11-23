@@ -20,7 +20,7 @@ I tested it only with TeamCity Visual Studio build runner (VS2015) with Octopus 
     <version>1.0.0</version>
   </metadata>
   <files>
-    <file src="obj\$configuration$\Precompiled\**\*.*" target="" />
+    <file src="obj\Release\Precompiled\**\*.*" target="" />
   </files>
 </package>
 ```
