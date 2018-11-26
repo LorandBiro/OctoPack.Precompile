@@ -44,7 +44,7 @@
       -->
       <CollectedFiles Remove="packages.config" />
       
-      <NormalizedFiles Include="@(CollectedFiles)" Condition="'%(CollectedFiles.Link)' == ''">
+      <NormalizedFiles Include="@(CollectedFiles)" Condition="'%(CollectedFiles.Link)' == '' AND '%(CollectedFiles.Exclude)' != 'True' ">
         <!--
           The Identity metadata of the items are inconsistent, some of them are full paths and some of them are relative. To keep the file and directory
           structure during the copy we need the relative path, so we take the FullPath metadata and calculate the relative path manually.
